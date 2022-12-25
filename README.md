@@ -4,7 +4,7 @@
 ##define coding=pypp
 
 !define { :?NEWLINE?INDENT
-!define } :?NEWLINE?DEDENT
+!define } ?NEWLINE?DEDENT
 
 while (True) {
     print(":3");
