@@ -35,9 +35,11 @@ SILLY: Token = (tokenize.ERRORTOKEN, " ")
 WIDE_DEF: Token = (tokenize.ERRORTOKEN, "`")
 TOKEN_ESCAPE: Token = (tokenize.ERRORTOKEN, "?")
 ESCAPES: dict[str, Token] = {
-    "INDENT": (tokenize.INDENT, "    "),
+    "INDENT": (tokenize.INDENT, ":3"),
     "DEDENT": (tokenize.DEDENT, ""),
     "NEWLINE": (tokenize.NEWLINE, "\n"),
+    "NL": (tokenize.NL, "\n"),
+    "BACKTICK": (tokenize.ERRORTOKEN, "`"),
     "ENDMARKER": (tokenize.ENDMARKER, ""),
 }
 
@@ -94,6 +96,7 @@ def preprocess(src: bytes) -> bytes:
 
     definitions: dict[tuple[Token, ...], list[Token]] = {}
     new_tokens: list[Token] = []
+    indentation: list[str] = []
     for token in tokens:
         if match_token(tokens, DEFINE):
             tokens.skip(2)
@@ -122,10 +125,20 @@ def preprocess(src: bytes) -> bytes:
             definitions[tuple(ident)] = repl
         else:
             new_tokens.append(token)
+            if token[0] == tokenize.INDENT:
+                indentation.append(token[1])
+            if token[0] == tokenize.DEDENT:
+                indentation.pop()
             for d, repl in definitions.items():
                 if match_token(tokens, d):
                     tokens.skip(len(d))
-                    new_tokens.extend(repl)
+                    for t in repl:
+                        if t[0] == tokenize.INDENT:
+                            new_tokens.append(
+                                (tokenize.INDENT, "".join(indentation) + "  ")
+                            )
+                        else:
+                            new_tokens.append(t)
                     break
 
     new_src = tokenize.untokenize(i[0:2] for i in new_tokens)

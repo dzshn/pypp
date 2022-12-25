@@ -22,7 +22,9 @@ while (True) {
 
 - [ ] Constants (e.g. `_WIN32`)
 - [ ] Conditionals (`!ifdef`, `!ifndef`)
+- [ ] Includes (`!include file.h`)
 - [ ] Custom pragmas
+- [x] Better `INDENT` token handling
 - [ ] Automatically install `.pth` file (possibly like [`pyston_lite_autoload`](https://github.com/pyston/pyston/blob/main/pyston/pyston_lite/autoload/setup.py))
 
 ## Install
@@ -35,6 +37,9 @@ $ pip install git+https://github.com/dzshn/pypp
 ```
 
 From source using [poetry](https://python-poetry.org)
+```sh
+$ poetry install
+```
 
 ## Usage
 
