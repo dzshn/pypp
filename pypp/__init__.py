@@ -130,17 +130,21 @@ def preprocess(src: bytes) -> bytes:
             indentation.append(token[1])
         if token[0] == tokenize.DEDENT:
             indentation.pop()
-        for d, repl in definitions.items():
-            if match_token(tokens, d):
-                tokens.skip(len(d))
-                for t in repl:
-                    if t[0] == tokenize.INDENT:
-                        indentation.append("  ")
-                        new_tokens.append(
-                            (tokenize.INDENT, "".join(indentation) + "  ")
-                        )
-                    else:
-                        new_tokens.append(t)
+        while True:
+            for d, repl in definitions.items():
+                if match_token(tokens, d):
+                    tokens.skip(len(d))
+                    for t in repl:
+                        if t[0] == tokenize.INDENT:
+                            indentation.append("  ")
+                            new_tokens.append(
+                                (tokenize.INDENT, "".join(indentation) + "  ")
+                            )
+                        else:
+                            new_tokens.append(t)
+                    break
+            else:
+                break
 
     new_src = tokenize.untokenize(i[0:2] for i in new_tokens)
     return new_src
