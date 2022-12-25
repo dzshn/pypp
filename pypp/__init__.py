@@ -134,6 +134,7 @@ def preprocess(src: bytes) -> bytes:
                     tokens.skip(len(d))
                     for t in repl:
                         if t[0] == tokenize.INDENT:
+                            indentation.append("  ")
                             new_tokens.append(
                                 (tokenize.INDENT, "".join(indentation) + "  ")
                             )
