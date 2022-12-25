@@ -44,7 +44,9 @@ $ poetry install
 ## Usage
 
 Call `pypp.setup()`, which will register the `pypp` codec. After that, you can
-import any file with the appropriate header (e.g. `##define coding=pypp`).
+import any file with the appropriate header (e.g. `##define coding=pypp`). This can
+be done automatically on every startup by copying the `pypp_autoload.pth` file into
+`site-packages`. (e.g. on linux: `~/.local/lib/python3.10/site-packages`)
 
 pypp is also available programmatically via `pypp.preprocess(src: bytes) -> bytes`.
 
