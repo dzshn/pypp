@@ -26,6 +26,7 @@ while (True) {
 - [ ] Custom pragmas
 - [x] Better `INDENT` token handling
 - [ ] Automatically install `.pth` file (possibly like [`pyston_lite_autoload`](https://github.com/pyston/pyston/blob/main/pyston/pyston_lite/autoload/setup.py))
+- [ ] Make it work on PyPy
 
 ## Install
 
@@ -36,7 +37,7 @@ $ pip install git+https://github.com/dzshn/pypp
 # or `py -m pip` etc
 ```
 
-From source using [poetry](https://python-poetry.org)
+From source using [poetry](https://python-poetry.org):
 ```sh
 $ poetry install
 ```
@@ -57,7 +58,7 @@ good question!
 ## the How
 
 the file is preprocessed in a C-like fashion, with some things added here and
-there. that part of the code is relatively "normal". to trick python into
+there. that part of the code is relatively[^1][^2] "normal". to trick python into
 thinking macros are real, though, requires a custom encoding to be made and
 loaded *before* python executes the script, (see [dankeyy's indec.py](https://github.com/dankeyy/incdec.py)
 for prior art) which allows preprocessing to happen right before python does
@@ -65,3 +66,6 @@ tokenization, thus avoiding all syntax errors.
 
 this could also potentially be implemented by hooking into `sys.meta_path`,
 but I thought doing stuff before tokenization was infinitely sillier :3
+
+[^1]: [Lispy](https://github.com/dzshn/lispy), a lisp dialect that's also valid python
+[^2]: [uwu](https://github.com/dzshn/uwu), `(^·ω·^)`-ified python bytecode
