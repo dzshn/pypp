@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "pypp"
+version = "0.1.0"
+description = "Python macro preprocessor"
+authors = ["Sofia Lima <me@dzshn.xyz>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
