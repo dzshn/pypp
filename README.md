@@ -25,7 +25,6 @@ fn main() {
 
 - Constants (e.g. by platform)
 - Conditional compilation (e.g. `!if sys.platform == "linux":`)
-- Includes (`!include file.h`)
 - Custom pragmas
 - Automatic `.pth` installation (possibly like [`pyston_lite_autoload`](https://github.com/pyston/pyston/blob/main/pyston/pyston_lite/autoload/setup.py))
 - PyPy support

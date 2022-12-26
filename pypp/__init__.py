@@ -18,7 +18,7 @@ ENVIRONMENT
 
     PYPATH
         A list of directories to look for header files, separated by a special
-        character.  The special character is platform-dependent, on most
+        character.  This special character is platform-dependent. On most
         platforms it is a colon, while on Windows it is a semicolon.
 
 SEE ALSO

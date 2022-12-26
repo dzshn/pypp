@@ -1,8 +1,25 @@
 # pypp documentation
 
+## Environment variables
+
+- `PYPP_DEBUG`: When set to a non-empty string, enable `pypp` debug mode, which
+will cause pypp to send the processed code to stdout.
+- `PYPATH`: A list of directories to look for header files, separated by a
+special character. This special character is platform-dependent. On most
+platforms it is a colon, while on Windows it is a semicolon.
+
 ## Syntax
 
 On top of Python syntax, `pypp` currently adds the following directives
+
+### Including files: `!include`
+
+`!include file.h` will replace that directive with the contents of the file. The
+filename may be quoted if spaces are present (which would be otherwise ignored).
+
+By convention, the extension for header files is either `.h` or `.hpy`.
+
+`pypp` will search both the current directory and `PYPATH` for header files.
 
 ### Macro definitions: `!define`
 
