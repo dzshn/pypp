@@ -1,14 +1,34 @@
 [tool.poetry]
 name = "pypp"
-version = "0.1.0"
-description = "Python macro preprocessor"
+version = "1.0.0"
+description = "pypp is the Python preprocessor"
 authors = ["Sofia Lima <me@dzshn.xyz>"]
 license = "MIT"
 readme = "README.md"
+homepage = "https://github.com/dzshn/pypp"
+repository = "https://github.com/dzshn/pypp"
+keywords = ["preprocessor"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Pre-processors",
+    "Topic :: Utilities",
+    "Typing :: Typed",
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"
 
+[tool.poetry.group.dev.dependencies]
+tox = "^4.0.16"
+
+[tool.mypy]
+python_version = "3.9"
+strict = true
 
 [build-system]
 requires = ["poetry-core"]

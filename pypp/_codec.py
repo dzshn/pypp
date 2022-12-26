@@ -1,18 +1,18 @@
 import codecs
 import traceback
-from typing import Optional, Union
+from typing import NoReturn, Optional, Union
 
 from pypp import preprocess
 
 
 class PYPPCodec(codecs.BufferedIncrementalDecoder):
-    def _buffer_decode(self, input: bytes, errors: str, final: bool) -> tuple[str, int]:  # type: ignore
+    def _buffer_decode(self, input: bytes, errors: str, final: bool) -> tuple[str, int]:
         if input:
             return decode(input)
         return "", 0
 
 
-def explode(input: str, errors: str = "strict"):
+def explode(input: str, errors: str = "strict") -> NoReturn:
     raise NotImplementedError
 
 
@@ -31,10 +31,7 @@ def decode(input: Union[memoryview, bytes], errors: str = "strict") -> tuple[str
 def search_function(name: str) -> Optional[codecs.CodecInfo]:
     if name == "pypp":
         return codecs.CodecInfo(
-            explode,
-            decode,
-            incrementaldecoder=PYPPCodec,
-            name="pypp"
+            explode, decode, incrementaldecoder=PYPPCodec, name="pypp"
         )
     return None
 

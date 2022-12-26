@@ -21,10 +21,11 @@ COPYRIGHT
 import re
 import tokenize
 from collections.abc import Callable, Iterable, Iterator
+from os import getenv
 from typing import Optional, TypeVar, Union
 
-
-__all__ = ["match_token", "preprocess"]
+__all__ = ["pretty_format_tokens", "match_token", "preprocess"]
+__version__ = "1.0.0"
 
 T_co = TypeVar("T_co", covariant=True)
 
@@ -46,6 +47,7 @@ ESCAPES: dict[str, Token] = {
 
 class LookAhead(Iterator[T_co]):
     """Helper class implementing lookahead for iterators."""
+
     def __init__(self, iterator: Iterator[T_co]):
         self._it = iterator
         self._cache: list[T_co] = []
@@ -60,9 +62,15 @@ class LookAhead(Iterator[T_co]):
             self._cache.append(next(self._it))
         return self._cache[n]
 
-    def skip(self, n: int = 1):
+    def skip(self, n: int = 1) -> None:
         for _ in range(n):
             next(self)
+
+
+def pretty_format_tokens(tokens: Iterable[Token]) -> str:
+    string = repr(" ".join(s for _, s, *_ in tokens)).strip("'\"")
+    types = " ".join(tokenize.tok_name[t] for t, *_ in tokens)
+    return f"{string} [{types}]"
 
 
 def match_token(
@@ -81,6 +89,7 @@ def match_token(
 
 def to_readline(content: bytes) -> Callable[[], bytes]:
     """Trick tokenize into thinking you have a real readline method"""
+
     def inner() -> Iterator[bytes]:
         yield from content.splitlines(keepends=True)
         yield b""
@@ -113,7 +122,7 @@ def preprocess(src: bytes) -> bytes:
                 ident: list[Token] = []
                 for tok in definition[1:]:
                     if tok == WIDE_DEF:
-                        repl = definition[len(ident)+2:]
+                        repl = definition[len(ident) + 2 :]
                         break
                     ident.append(tok)
                 else:
@@ -146,11 +155,21 @@ def preprocess(src: bytes) -> bytes:
             else:
                 break
 
-    new_src = tokenize.untokenize(i[0:2] for i in new_tokens)
+    new_src: bytes = tokenize.untokenize(i[0:2] for i in new_tokens)
+    if getenv("PYPP_DEBUG") == "1":
+        print(" BEGIN PYPP MACROS ".center(80, "-"))
+        for d, repl in definitions.items():
+            print(pretty_format_tokens(d), "=>", pretty_format_tokens(repl))
+
+        print(" END MACROS ".center(80, "-"))
+        print(" BEGIN PYPP OUTPUT ".center(80, "-"))
+        print(new_src.decode())
+        print(" END PYPP OUTPUT ".center(80, "-"))
+
     return new_src
 
 
-def setup():
+def setup() -> None:
     from pypp._codec import register
 
     register()

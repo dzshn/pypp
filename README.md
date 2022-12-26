@@ -1,32 +1,34 @@
-# pypp - the python preprocessor
+# pypp - The Python Preprocessor
 
 ```py
 ##define coding=pypp
 
 !define { :?NEWLINE?INDENT
 !define } ?NEWLINE?DEDENT
+!define fn def
+!define `println!` print
+!define ?ENDMARKER main()?ENDMARKER
 
-while (True) {
-    print(":3");
+fn main() {
+    println!("hai :3");
 }
 ```
 
 ## Features
 
-- Entirely token-based, like `cpp`
-- Macro definitions (`!define PI 3`)
-- Multi-token replacement (``!define `<>` !=``)
-- Probably production ready
+- Extremely flexible and easy to use token-based macros: `!define PI 3` is just as valid as ``!define `<>` !=``.
+- Completely compatible with all Python code, the syntax for directives is superset from it.
+    - Imports work both ways
+    - On many cases, also compatible with code checking tools (type checking with `mypy` works)
 
 ## Roadmap
 
-- [ ] Constants (e.g. `_WIN32`)
-- [ ] Conditionals (`!ifdef`, `!ifndef`)
-- [ ] Includes (`!include file.h`)
-- [ ] Custom pragmas
-- [x] Better `INDENT` token handling
-- [ ] Automatically install `.pth` file (possibly like [`pyston_lite_autoload`](https://github.com/pyston/pyston/blob/main/pyston/pyston_lite/autoload/setup.py))
-- [ ] Make it work on PyPy
+- Constants (e.g. by platform)
+- Conditional compilation (e.g. `!if sys.platform == "linux":`)
+- Includes (`!include file.h`)
+- Custom pragmas
+- Automatic `.pth` installation (possibly like [`pyston_lite_autoload`](https://github.com/pyston/pyston/blob/main/pyston/pyston_lite/autoload/setup.py))
+- PyPy support
 
 ## Install
 
@@ -42,14 +44,24 @@ From source using [poetry](https://python-poetry.org):
 $ poetry install
 ```
 
+> **Warning**
+> It is also required to copy over the `pypp_autoload.pth` file into `site-packages` (see section below).
+
 ## Usage
 
-Call `pypp.setup()`, which will register the `pypp` codec. After that, you can
-import any file with the appropriate header (e.g. `##define coding=pypp`). This can
-be done automatically on every startup by copying the `pypp_autoload.pth` file into
-`site-packages`. (e.g. on linux: `~/.local/lib/python3.10/site-packages`)
+To autoload `pypp`, it is required to copy over the `pypp_autoload.pth` file into your
+site-packages. By default, Python uses the following paths: _(X and Y refer to Python's
+version)_
 
-pypp is also available programmatically via `pypp.preprocess(src: bytes) -> bytes`.
+- Unix: `~/.local/lib/pythonX.Y/site-packages`
+- macOS: `~/Library/Python/X.Y/lib/python/site-packages`
+- Windows: `%APPDATA%\Python\PythonXY\site-packages`
+
+Loading can also be done manually by calling `pypp.setup()`.
+
+`pypp` is also available programmatically via `pypp.preprocess(src: bytes) -> bytes`.
+
+Usage examples can be found [here](examples/). More in-depth documentation can be found [here](DOCS.md)
 
 ## wait, what
 
