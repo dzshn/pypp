@@ -11,6 +11,16 @@ DESCRIPTION
     before tokenization.  It is called a macro processor because it allows you
     to define macros, which are brief abbreviations for longer constructs.
 
+ENVIRONMENT
+    PYPP_DEBUG
+        When set to a non-empty string, enable pypp debug mode, which will
+        cause pypp to send the processed code to stdout.
+
+    PYPATH
+        A list of directories to look for header files, separated by a special
+        character.  The special character is platform-dependent, on most
+        platforms it is a colon, while on Windows it is a semicolon.
+
 SEE ALSO
     cpp(1) - A generic text preprocessor.
 
@@ -18,20 +28,31 @@ COPYRIGHT
     Copyright (c) 2022 Sofia Lima.  See LICENSE file for full licensing info.
 """
 
+import itertools
 import re
 import tokenize
 from collections.abc import Callable, Iterable, Iterator
-from os import getenv
+from os import getenv, pathsep
+from pathlib import Path
 from typing import Optional, TypeVar, Union
 
-__all__ = ["pretty_format_tokens", "match_token", "preprocess"]
+__all__ = ["match_token", "preprocess", "preprocess_tokens", "pretty_format_tokens"]
 __version__ = "1.0.0"
 
 T_co = TypeVar("T_co", covariant=True)
 
 Token = Union[tokenize.TokenInfo, tuple[int, str]]
+Definitions = dict[tuple[Token, ...], list[Token]]
+
+PYPP_DEBUG = bool(getenv("PYPP_DEBUG"))
+PYPP_PATH = [Path().resolve()]
+for i in (getenv("PYPATH") or "").split(pathsep):
+    if not i:
+        continue
+    PYPP_PATH.append(Path(i).expanduser().resolve())
 
 DEFINE: list[Token] = [(tokenize.ERRORTOKEN, "!"), (tokenize.NAME, "define")]
+INCLUDE: list[Token] = [(tokenize.ERRORTOKEN, "!"), (tokenize.NAME, "include")]
 SILLY: Token = (tokenize.ERRORTOKEN, " ")
 WIDE_DEF: Token = (tokenize.ERRORTOKEN, "`")
 TOKEN_ESCAPE: Token = (tokenize.ERRORTOKEN, "?")
@@ -97,13 +118,10 @@ def to_readline(content: bytes) -> Callable[[], bytes]:
     return inner().__next__
 
 
-def preprocess(src: bytes) -> bytes:
-    # comment out this line to get a lovely 1 million characters long traceback
-    src = re.sub(rb"^#.*coding\w*[:=]\w*pypp.*\n", b"", src, re.M)
+def preprocess_tokens(tokens: Iterable[Token]) -> tuple[Definitions, list[Token]]:
+    tokens = LookAhead(iter(tokens))
 
-    tokens = LookAhead(tokenize.tokenize(to_readline(src)))
-
-    definitions: dict[tuple[Token, ...], list[Token]] = {}
+    definitions: Definitions = {}
     new_tokens: list[Token] = []
     indentation: list[str] = []
     for token in tokens:
@@ -134,6 +152,40 @@ def preprocess(src: bytes) -> bytes:
             definitions[tuple(ident)] = repl
             continue
 
+        if match_token(tokens, INCLUDE):
+            tokens.skip(2)
+            name = ""
+            while tokens.lookahead()[0] not in {tokenize.NEWLINE, tokenize.NL}:
+                token = next(tokens)
+                name += token[1]
+            name = name.strip("'\"")
+            parts = list(Path(name).parts)
+            header = None
+            while parts:
+                for path in PYPP_PATH:
+                    if (header := path.joinpath(*parts)).exists():
+                        break
+                    header = None
+                if header is not None:
+                    break
+                parts.pop(0)
+
+            if header is None:
+                raise LookupError(f"couldn't resolve {name}")
+
+            with header.open("rb") as f:
+                header_defs, header_tokens = preprocess_tokens(
+                    itertools.takewhile(
+                        # don't break ENDMARKER defines
+                        lambda t: t[0] != tokenize.ENDMARKER,
+                        tokenize.tokenize(f.readline),
+                    )
+                )
+                definitions.update(header_defs)
+                new_tokens.extend(header_tokens)
+
+            continue
+
         new_tokens.append(token)
         if token[0] == tokenize.INDENT:
             indentation.append(token[1])
@@ -154,6 +206,15 @@ def preprocess(src: bytes) -> bytes:
                     break
             else:
                 break
+
+    return definitions, new_tokens
+
+
+def preprocess(src: bytes) -> bytes:
+    # comment out this line to get a lovely 1 million characters long traceback
+    src = re.sub(rb"^#.*coding\w*[:=]\w*pypp.*\n", b"", src, re.M)
+
+    definitions, new_tokens = preprocess_tokens(tokenize.tokenize(to_readline(src)))
 
     new_src: bytes = tokenize.untokenize(i[0:2] for i in new_tokens)
     if getenv("PYPP_DEBUG") == "1":
