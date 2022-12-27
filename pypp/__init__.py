@@ -64,6 +64,7 @@ ESCAPES: dict[str, Token] = {
     "NEWLINE": (tokenize.NEWLINE, "\n"),
     "NL": (tokenize.NL, "\n"),
     "BACKTICK": (tokenize.ERRORTOKEN, "`"),
+    "?": (tokenize.ERRORTOKEN, "?"),
     "ENDMARKER": (tokenize.ENDMARKER, ""),
 }
 
@@ -92,7 +93,7 @@ class LookAhead(Iterator[T_co]):
 
 def pretty_format_tokens(tokens: Iterable[Token]) -> str:
     string = repr(" ".join(s for _, s, *_ in tokens)).strip("'\"")
-    types = " ".join(tokenize.tok_name[t] for t, *_ in tokens)
+    types = " ".join(tokenize.tok_name.get(t, f"?{~t}") for t, *_ in tokens)
     return f"{string} [{types}]"
 
 
@@ -109,7 +110,7 @@ def match_token(
                 return None
         except StopIteration:
             return None
-        match.append(x)
+        match.append(token)
     return match
 
 
@@ -138,7 +139,13 @@ def preprocess_tokens(tokens: Iterable[Token]) -> tuple[Definitions, list[Token]
                 if token[0:2] == SILLY:
                     continue
                 if token[0:2] == TOKEN_ESCAPE:
-                    definition.append(ESCAPES[next(tokens)[1]])
+                    escape = next(tokens)[1]
+                    if escape in ESCAPES:
+                        definition.append(ESCAPES[escape])
+                    elif escape.isdecimal():
+                        definition.append((~int(escape), ":3"))
+                    else:
+                        raise SyntaxError(f"unknown escape {escape}")
                     continue
                 definition.append(token[0:2])
             if definition[0][0:2] == WIDE_DEF:
@@ -198,10 +205,12 @@ def preprocess_tokens(tokens: Iterable[Token]) -> tuple[Definitions, list[Token]
             indentation.pop()
         while True:
             for d, repl in definitions.items():
-                if match_token(tokens, d):
+                if match := match_token(tokens, d):
                     tokens.skip(len(d))
                     for t in repl:
-                        if t[0] == tokenize.INDENT:
+                        if t[0] < 0:
+                            new_tokens.append(match[~t[0]])
+                        elif t[0] == tokenize.INDENT:
                             indentation.append("  ")
                             new_tokens.append(
                                 (tokenize.INDENT, "".join(indentation) + "  ")
