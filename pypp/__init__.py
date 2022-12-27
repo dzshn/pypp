@@ -58,6 +58,8 @@ WIDE_DEF: Token = (tokenize.ERRORTOKEN, "`")
 TOKEN_ESCAPE: Token = (tokenize.ERRORTOKEN, "?")
 ESCAPES: dict[str, Token] = {
     "INDENT": (tokenize.INDENT, ":3"),
+    "NUMBER": (tokenize.NUMBER, ":3"),
+    "STRING": (tokenize.STRING, ":3"),
     "DEDENT": (tokenize.DEDENT, ""),
     "NEWLINE": (tokenize.NEWLINE, "\n"),
     "NL": (tokenize.NL, "\n"),
@@ -100,7 +102,10 @@ def match_token(
     match: list[Token] = []
     for i, x in enumerate(query):
         try:
-            if tokens.lookahead(i)[0:2] != x[0:2]:
+            token = tokens.lookahead(i)[0:2]
+            if token[0] == x[0] and x[1] == ":3":
+                pass
+            elif token != x[0:2]:
                 return None
         except StopIteration:
             return None
